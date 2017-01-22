@@ -29,7 +29,6 @@ class deepfashion(imdb):
         self._class_to_ind = dict(zip(self.classes, xrange(self.num_classes)))
         self._image_ext = '.jpg'
         self._image_index = self._load_image_set_index()
-        self._bbox_index = self._load_bbox_index()
         self._salt = str(uuid.uuid4())
         self._comp_id = 'comp4'
 
@@ -56,7 +55,7 @@ class deepfashion(imdb):
         Construct an image path from the image's "index" identifier.
         """
         for ext in self._image_ext:
-            image_path = os.path.join(self._data_path, 'Consumer2Shop',
+            image_path = os.path.join(self._data_path, 'Consumer2Shop', 'jpg',
                                   index + ext)
             if os.path.exists(image_path):
                 break
@@ -115,26 +114,16 @@ class deepfashion(imdb):
             box_list = cPickle.load(f)
         return self.create_roidb_from_box_list(box_list, gt_roidb)
 
-    def _load_bbox_index(self):
-        """
-        Load the indexes listed in this dataset's bbox file.
-        """
-        # self._data_path + /Consumer2Shop/Anno/bbox.txt
-        bbox_file = os.path.join(self._data_path, 'Consumer2Shop', 'Anno', 
-                                      'bbox.txt')
-        assert os.path.exists(bbox_file), \
-                'Path does not exist: {}'.format(bbox_file)
-        with open(bbox_file) as f:
-            bbox_index = [x.strip() for x in f.readlines()]
-        return bbox_index
-
     def _load_deepfashion_annotation(self, index):
         """
         Load image and bounding boxes info from txt files of DeepFashion.
         """
+        filename = os.path.join(self._data_path, 'Consumer2shop', 'annotation', index)
+        with open(filename) as f:
+            objs = f.readlines()
 
-        # Only one clothing in an image
-        num_objs = 1
+        num_objs = len(objs)
+
         boxes = np.zeros((num_objs, 4), dtype=np.uint16)
         gt_classes = np.zeros((num_objs), dtype=np.int32)
         overlaps = np.zeros((num_objs, self.num_classes), dtype=np.float32)
@@ -144,16 +133,17 @@ class deepfashion(imdb):
 
         # Load object bounding boxes into a data frame.
         # Make pixel indexes 0-based
-	coor = re.findall('\d+', self._bbox_index[index])
-        x1 = float(coor[0])
-        y1 = float(coor[1])
-        x2 = float(coor[2])
-        y2 = float(coor[3])
-        cls = self._class_to_ind['clothing']
-        boxes[ix, :] = [x1, y1, x2, y2]
-        gt_classes[ix] = cls
-        overlaps[ix, cls] = 1.0
-        seg_areas[ix] = (x2 - x1 + 1) * (y2 - y1 + 1)
+        for ix, obj in enumerate(objs):
+            coor = re.findall('\d+', obj[:-1])
+            x1 = float(coor[0])
+            y1 = float(coor[1])
+            x2 = float(coor[2])
+            y2 = float(coor[3])
+            cls = self._class_to_ind['clothing']
+            boxes[ix, :] = [x1, y1, x2, y2]
+            gt_classes[ix] = cls
+            overlaps[ix, cls] = 1.0
+            seg_areas[ix] = (x2 - x1 + 1) * (y2 - y1 + 1)
 
         overlaps = scipy.sparse.csr_matrix(overlaps)
 
@@ -163,12 +153,12 @@ class deepfashion(imdb):
                 'flipped' : False,
                 'seg_areas' : seg_areas}
 
-    def _write_inria_results_file(self, all_boxes):
+    def _write_deepfashion_results_file(self, all_boxes):
         for cls_ind, cls in enumerate(self.classes):
             if cls == '__background__':
                 continue
             print 'Writing {} results file'.format(cls)
-            filename = self._get_inria_results_file_template().format(cls)
+            filename = self._get_deepfashion_results_file_template().format(cls)
             with open(filename, 'wt') as f:
                 for im_ind, index in enumerate(self.image_index):
                     dets = all_boxes[cls_ind][im_ind]
@@ -182,13 +172,13 @@ class deepfashion(imdb):
                                        dets[k, 2] + 1, dets[k, 3] + 1))
 
     def evaluate_detections(self, all_boxes, output_dir):
-        self._write_inria_results_file(all_boxes)
+        self._write_deepfashion_results_file(all_boxes)
         self._do_python_eval(output_dir)
         if self.config['cleanup']:
             for cls in self._classes:
                 if cls == '__background__':
                     continue
-                filename = self._get_inria_results_file_template().format(cls)
+                filename = self._get_deepfashion_results_file_template().format(cls)
                 os.remove(filename)
 
     def _get_comp_id(self):
@@ -196,8 +186,8 @@ class deepfashion(imdb):
             else self._comp_id)
         return comp_id
 
-    def _get_inria_results_file_template(self):
-        # INRIAdevkit/results/comp4-44503_det_test_{%s}.txt
+    def _get_deepfashion_results_file_template(self):
+        # DeepFashion/Consumer2Shop/results/comp4-44503_det_test_{%s}.txt
         filename = self._get_comp_id() + '_det_' + self._image_set + '_{:s}.txt'
         try:
             os.mkdir(self._devkit_path + '/results')
@@ -208,6 +198,7 @@ class deepfashion(imdb):
                 raise e
         path = os.path.join(
             self._devkit_path,
+            'Consumer2Shop',
             'results',
             filename)
         return path
@@ -215,11 +206,13 @@ class deepfashion(imdb):
     def _do_python_eval(self, output_dir = 'output'):
         annopath = os.path.join(
             self._data_path,
-            'Annotations',
+            'Consumer2Shop',
+            'annotation',
             '{:s}.txt')
         imagesetfile = os.path.join(
             self._data_path,
-            'ImageSets',
+            'Consumer2Shop',
+            'Anno',
             self._image_set + '.txt')
         cachedir = os.path.join(self._devkit_path, 'annotations_cache')
         aps = []
@@ -228,8 +221,8 @@ class deepfashion(imdb):
         for i, cls in enumerate(self._classes):
             if cls == '__background__':
                 continue
-            filename = self._get_inria_results_file_template().format(cls)
-            rec, prec, ap = inria_eval(
+            filename = self._get_deepfashion_results_file_template().format(cls)
+            rec, prec, ap = deepfashion_eval(
                 filename, annopath, imagesetfile, cls, cachedir, ovthresh=0.5)
             aps += [ap]
             print('AP for {} = {:.4f}'.format(cls, ap))
