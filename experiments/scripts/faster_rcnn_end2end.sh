@@ -1,11 +1,12 @@
 #!/bin/bash
 # Usage:
 # ./experiments/scripts/faster_rcnn_end2end.sh GPU NET DATASET [options args to {train,test}_net.py]
-# DATASET is either pascal_voc or coco.
+# DATASET is either pascal_voc or coco or deepfashion.
 #
 # Example:
 # ./experiments/scripts/faster_rcnn_end2end.sh 0 VGG_CNN_M_1024 pascal_voc \
 #   --set EXP_DIR foobar RNG_SEED 42 TRAIN.SCALES "[400, 500, 600, 700]"
+# ./experiments/scripts/faster_rcnn_end2end.sh 0 VGG16 deepfashion
 
 set -x
 set -e
@@ -37,6 +38,12 @@ case $DATASET in
     TEST_IMDB="coco_2014_minival"
     PT_DIR="coco"
     ITERS=490000
+    ;;
+  deepfashion)
+    TRAIN_IMDB="deepfashion_train"
+    TEST_IMDB="deepfashion_test"
+    PT_DIR="deepfashion"
+    ITERS=70000
     ;;
   *)
     echo "No dataset given"
