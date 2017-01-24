@@ -204,7 +204,7 @@ class deepfashion(imdb):
         annopath = os.path.join(
             self._data_path,
             'annotation',
-            '{:s}.txt')
+            '{:s}')
         imagesetfile = os.path.join(
             self._data_path,
             'Anno',
