@@ -188,15 +188,14 @@ class deepfashion(imdb):
         # DeepFashion/Consumer2Shop/results/comp4-44503_det_test_{%s}.txt
         filename = self._get_comp_id() + '_det_' + self._image_set + '_{:s}.txt'
         try:
-            os.mkdir(self._devkit_path + '/results')
+            os.mkdir(self._data_path + '/results')
         except OSError as e:
             if e.errno == errno.EEXIST:
                 pass
             else:
                 raise e
         path = os.path.join(
-            self._devkit_path,
-            'Consumer2Shop',
+            self._data_path,
             'results',
             filename)
         return path
