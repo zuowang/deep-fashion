@@ -34,7 +34,7 @@ for year in ['2015']:
 
 deepfashion_path = '/home/deepinsight/py-faster-rcnn/data/DeepFashion'
 for split in ['train', 'test']:
-    name = '{}_{}'.format('deepfashion', split)
+    name = 'deepfashion_{}'.format(split)
     __sets[name] = (lambda split=split: deepfashion(split, deepfashion_path))
 
 def get_imdb(name):

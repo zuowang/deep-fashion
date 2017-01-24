@@ -1,4 +1,4 @@
-train_net: "models/deep_fashion/VGG16/faster_rcnn_end2end/train.prototxt"
+train_net: "models/deepfashion/VGG16/faster_rcnn_end2end/train.prototxt"
 base_lr: 0.001
 lr_policy: "step"
 gamma: 0.1

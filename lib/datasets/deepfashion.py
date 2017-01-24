@@ -16,7 +16,8 @@ import utils.cython_bbox
 import cPickle
 import subprocess
 import uuid
-from inria_eval import inria_eval
+from deepfashion_eval import deepfashion_eval
+import re
 
 class deepfashion(imdb):
     def __init__(self, image_set, devkit_path):
@@ -54,11 +55,8 @@ class deepfashion(imdb):
         """
         Construct an image path from the image's "index" identifier.
         """
-        for ext in self._image_ext:
-            image_path = os.path.join(self._data_path, 'Consumer2Shop', 'jpg',
-                                  index + ext)
-            if os.path.exists(image_path):
-                break
+        image_path = os.path.join(self._data_path, 'jpg',
+                              index + self._image_ext)
         assert os.path.exists(image_path), \
                 'Path does not exist: {}'.format(image_path)
 	return image_path
@@ -69,7 +67,7 @@ class deepfashion(imdb):
         """
         # Example path to image set file:
         # self._data_path + /Consumer2Shop/Anno/train.txt
-        image_set_file = os.path.join(self._data_path, 'Consumer2Shop', 'Anno', 
+        image_set_file = os.path.join(self._data_path, 'Anno', 
                                       self._image_set + '.txt')
         assert os.path.exists(image_set_file), \
                 'Path does not exist: {}'.format(image_set_file)
@@ -90,7 +88,7 @@ class deepfashion(imdb):
             print '{} gt roidb loaded from {}'.format(self.name, cache_file)
             return roidb
 
-        gt_roidb = [self._load_inria_annotation(index)
+        gt_roidb = [self._load_deepfashion_annotation(index)
                     for index in self.image_index]
         with open(cache_file, 'wb') as fid:
             cPickle.dump(gt_roidb, fid, cPickle.HIGHEST_PROTOCOL)
@@ -206,12 +204,10 @@ class deepfashion(imdb):
     def _do_python_eval(self, output_dir = 'output'):
         annopath = os.path.join(
             self._data_path,
-            'Consumer2Shop',
             'annotation',
             '{:s}.txt')
         imagesetfile = os.path.join(
             self._data_path,
-            'Consumer2Shop',
             'Anno',
             self._image_set + '.txt')
         cachedir = os.path.join(self._devkit_path, 'annotations_cache')
