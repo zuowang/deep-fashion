@@ -109,10 +109,16 @@ class imdb(object):
             boxes[:, 0] = widths[i] - oldx2
             boxes[:, 2] = widths[i] - oldx1
             assert (boxes[:, 2] >= boxes[:, 0]).all()
+            landmarks = self.roidb[i]['landmarks'].copy()
+            oldx = landmarks[:, 1].copy()
+            landmarks[:, 1] = widths[i] - oldx  
             entry = {'boxes' : boxes,
                      'gt_overlaps' : self.roidb[i]['gt_overlaps'],
                      'gt_classes' : self.roidb[i]['gt_classes'],
-                     'flipped' : True}
+                     'flipped' : True,
+                     'landmarks' : landmarks,
+                     'clothes_type' : self.roidb[i]['clothes_type'],
+                     'variation_type' : self.roidb[i]['variation_type']}
             self.roidb.append(entry)
         self._image_index = self._image_index * 2
 

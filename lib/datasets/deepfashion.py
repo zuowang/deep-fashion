@@ -145,11 +145,26 @@ class deepfashion(imdb):
 
         overlaps = scipy.sparse.csr_matrix(overlaps)
 
+        filename = os.path.join(self._data_path, 'landmark', index)
+        with open(filename) as f:
+            objs = f.readlines()
+
+        import re
+        e = re.findall('\d+', objs[0])
+        landmarks = np.asarray(e[2:], dtype=np.uint16)
+        landmarks.reshape(-1,3)
+        clothes_type = float(e[0])
+        variation_type = float(e[1])
+
+
         return {'boxes' : boxes,
                 'gt_classes': gt_classes,
                 'gt_overlaps' : overlaps,
                 'flipped' : False,
-                'seg_areas' : seg_areas}
+                'seg_areas' : seg_areas,
+                'landmarks' : landmarks,
+                'clothes_type' : clothes_type,
+                'variation_type' : variation_type}
 
     def _write_deepfashion_results_file(self, all_boxes):
         for cls_ind, cls in enumerate(self.classes):
