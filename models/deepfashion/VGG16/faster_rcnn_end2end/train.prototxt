@@ -5,6 +5,7 @@ layer {
   top: 'data'
   top: 'im_info'
   top: 'gt_boxes'
+  top: 'gt_landmarks'
   python_param {
     module: 'roi_data_layer.layer'
     layer: 'RoIDataLayer'

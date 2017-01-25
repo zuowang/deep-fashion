@@ -121,7 +121,6 @@ def deepfashion_eval(detpath,
     # extract gt objects for this class
     class_recs = {}
     npos = 0
-    import pdb;pdb.set_trace()
     for imagename in imagenames:
         R = [obj for obj in recs[imagename] if obj['name'] == classname]
         bbox = np.array([x['bbox'] for x in R])

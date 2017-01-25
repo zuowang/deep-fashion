@@ -116,7 +116,7 @@ class deepfashion(imdb):
         """
         Load image and bounding boxes info from txt files of DeepFashion.
         """
-        filename = os.path.join(self._data_path, 'Consumer2shop', 'annotation', index)
+        filename = os.path.join(self._data_path, 'annotation', index)
         with open(filename) as f:
             objs = f.readlines()
 
@@ -149,10 +149,9 @@ class deepfashion(imdb):
         with open(filename) as f:
             objs = f.readlines()
 
-        import re
         e = re.findall('\d+', objs[0])
         landmarks = np.asarray(e[2:], dtype=np.uint16)
-        landmarks.reshape(-1,3)
+        landmarks = landmarks.reshape(-1,3)
         clothes_type = float(e[0])
         variation_type = float(e[1])
 

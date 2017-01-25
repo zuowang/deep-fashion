@@ -42,6 +42,10 @@ def get_minibatch(roidb, num_classes):
         blobs['im_info'] = np.array(
             [[im_blob.shape[2], im_blob.shape[3], im_scales[0]]],
             dtype=np.float32)
+        # gt_landmarks: (vis, x1, y1)
+        gt_landmarks = roidb[0]['landmarks']
+        gt_landmarks[:, 1:] = gt_landmarks[:, 1:] * im_scales[0]
+        blobs['gt_landmarks'] = gt_landmarks
     else: # not using RPN
         # Now, build the region of interest and label blobs
         rois_blob = np.zeros((0, 5), dtype=np.float32)
